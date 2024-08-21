@@ -1,220 +1,85 @@
-import os
+#!/usr/bin/env python3
+
 import random
-import sys
-from typing import Sequence, Mapping, Any, Union
+from dataclasses import dataclass
 import torch
 
+from main import load_extra_path_config
+from nodes import init_custom_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, SaveImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
 
-def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
-    """Returns the value at the given index of a sequence or mapping.
+load_extra_path_config("extra_model_paths.yaml")
+init_custom_nodes()
 
-    If the object is a sequence (like list or string), returns the value at the given index.
-    If the object is a mapping (like a dictionary), returns the value at the index-th key.
+@dataclass
+class HyperConfig:
+    MODEL = "RealVisXL_V4.0.safetensors"
+    cnet_depth = "diffusers_xl_depth_full.safetensors"
+    cnet_canny = "diffusers_xl_canny_full.safetensors"
+    upscale = "RealESRGAN_x2.pth"
 
-    Some return a dictionary, in these cases, we look for the "results" key
+    prompt = "a photograph of a red starfish, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
-    Args:
-        obj (Union[Sequence, Mapping]): The object to retrieve the value from.
-        index (int): The index of the value to retrieve.
+    VERSION = "v001"
+    SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/stage_{VERSION}_"
+    albedo = str(SOURCE + "albedo.png")
+    depth = str(SOURCE + "depth.png")
+    curvature = str(SOURCE + "curvature.png")
 
-    Returns:
-        Any: The value at the given index.
+    depth_stength = 1
+    canny_stength = 0.5
 
-    Raises:
-        IndexError: If the index is out of bounds for the object and the object is not a mapping.
-    """
-    try:
-        return obj[index]
-    except KeyError:
-        return obj["result"][index]
-
-
-def find_path(name: str, path: str = None) -> str:
-    """
-    Recursively looks at parent folders starting from the given path until it finds the given name.
-    Returns the path as a Path object if found, or None otherwise.
-    """
-    # If no path is given, use the current working directory
-    if path is None:
-        path = os.getcwd()
-
-    # Check if the current directory contains the name
-    if name in os.listdir(path):
-        path_name = os.path.join(path, name)
-        print(f"{name} found: {path_name}")
-        return path_name
-
-    # Get the parent directory
-    parent_directory = os.path.dirname(path)
-
-    # If the parent directory is the same as the current directory, we've reached the root and stop the search
-    if parent_directory == path:
-        return None
-
-    # Recursively call the function with the parent directory
-    return find_path(name, parent_directory)
-
-
-def add_comfyui_directory_to_sys_path() -> None:
-    """
-    Add 'ComfyUI' to the sys.path
-    """
-    comfyui_path = find_path("ComfyUI")
-    if comfyui_path is not None and os.path.isdir(comfyui_path):
-        sys.path.append(comfyui_path)
-        print(f"'{comfyui_path}' added to sys.path")
-
-
-def add_extra_model_paths() -> None:
-    """
-    Parse the optional extra_model_paths.yaml file and add the parsed paths to the sys.path.
-    """
-    from main import load_extra_path_config
-
-    extra_model_paths = find_path("extra_model_paths.yaml")
-
-    if extra_model_paths is not None:
-        load_extra_path_config(extra_model_paths)
-    else:
-        print("Could not find the extra_model_paths config file.")
-
-
-add_comfyui_directory_to_sys_path()
-add_extra_model_paths()
-
-
-def import_custom_nodes() -> None:
-    """Find all custom nodes in the custom_nodes folder and add those node objects to NODE_CLASS_MAPPINGS
-
-    This function sets up a new asyncio event loop, initializes the PromptServer,
-    creates a PromptQueue, and initializes the custom nodes.
-    """
-    import asyncio
-    import execution
-    from nodes import init_custom_nodes
-    import server
-
-    # Creating a new event loop and setting it as the default loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    # Creating an instance of PromptServer with the loop
-    server_instance = server.PromptServer(loop)
-    execution.PromptQueue(server_instance)
-
-    # Initializing custom nodes
-    init_custom_nodes()
-
-
-from nodes import (
-    VAEDecode,
-    VAEEncode,
-    NODE_CLASS_MAPPINGS,
-    SaveImage,
-    CheckpointLoaderSimple,
-    LoadImage,
-    ControlNetApply,
-    KSampler,
-    CLIPTextEncode,
-    ControlNetLoader,
-)
-
+    sampler = "dpmpp_2m"
+    scheduler = "karras"
+    num_images = 3
+    infer_steps = 20
+    denoise = 0.75
+    cfg_scale = 8.0
 
 def main():
-    import_custom_nodes()
+    config = HyperConfig()
+
     with torch.inference_mode():
-        checkpointloadersimple = CheckpointLoaderSimple()
-        checkpointloadersimple_152 = checkpointloadersimple.load_checkpoint(
-            ckpt_name="RealVisXL_V4.0.safetensors"
-        )
+        ckpt = CheckpointLoaderSimple().load_checkpoint(ckpt_name=config.MODEL)
 
-        cliptextencode = CLIPTextEncode()
-        cliptextencode_154 = cliptextencode.encode(
-            text="worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions",
-            clip=get_value_at_index(checkpointloadersimple_152, 1),
-        )
+        image = LoadImage()
+        cd = image.load_image(image=config.albedo)
+        z = image.load_image(image=config.depth)
+        curv = image.load_image(image=config.curvature)
 
+        enc = VAEEncode().encode(pixels=cd[0], vae=ckpt[2])
+
+        clipencode = CLIPTextEncode()
+        clipencode_prompt = clipencode.encode(text=config.prompt, clip=ckpt[1])
+        clipencode_negative = clipencode.encode(text=config.negative, clip=ckpt[1])
+
+        controlnet = ControlNetApply()
         controlnetloader = ControlNetLoader()
-        controlnetloader_155 = controlnetloader.load_controlnet(
-            control_net_name="diffusers_xl_depth_full.safetensors"
-        )
+        controlnetloader_depth = controlnetloader.load_controlnet(control_net_name=config.cnet_depth)
+        controlnetloader_canny = controlnetloader.load_controlnet(control_net_name=config.cnet_canny)
 
-        loadimage = LoadImage()
-        loadimage_157 = loadimage.load_image(image="stage_v001_depth (4).png")
+        upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
 
-        loadimage_184 = loadimage.load_image(image="stage_v001_albedo (3).png")
+        for _ in range(config.num_images):
+            clip_depth = controlnet.apply_controlnet(strength=config.depth_stength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
+            clip_canny = controlnet.apply_controlnet(strength=config.canny_stength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
 
-        vaeencode = VAEEncode()
-        vaeencode_185 = vaeencode.encode(
-            pixels=get_value_at_index(loadimage_184, 0),
-            vae=get_value_at_index(checkpointloadersimple_152, 2),
-        )
-
-        upscalemodelloader = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]()
-        upscalemodelloader_195 = upscalemodelloader.load_model(
-            model_name="RealESRGAN_x2.pth"
-        )
-
-        controlnetloader_235 = controlnetloader.load_controlnet(
-            control_net_name="diffusers_xl_canny_full.safetensors"
-        )
-
-        loadimage_236 = loadimage.load_image(image="stage_v001_curvature (2).png")
-
-        cliptextencode_250 = cliptextencode.encode(
-            text="a photograph of a red starfish, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))",
-            clip=get_value_at_index(checkpointloadersimple_152, 1),
-        )
-
-        controlnetapply = ControlNetApply()
-        ksampler = KSampler()
-        vaedecode = VAEDecode()
-        imageupscalewithmodel = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]()
-        saveimage = SaveImage()
-
-        for q in range(10):
-            controlnetapply_156 = controlnetapply.apply_controlnet(
-                strength=1,
-                conditioning=get_value_at_index(cliptextencode_250, 0),
-                control_net=get_value_at_index(controlnetloader_155, 0),
-                image=get_value_at_index(loadimage_157, 0),
-            )
-
-            controlnetapply_242 = controlnetapply.apply_controlnet(
-                strength=0.5,
-                conditioning=get_value_at_index(controlnetapply_156, 0),
-                control_net=get_value_at_index(controlnetloader_235, 0),
-                image=get_value_at_index(loadimage_236, 0),
-            )
-
-            ksampler_151 = ksampler.sample(
+            latents = KSampler().sample(
                 seed=random.randint(1, 2**64),
-                steps=20,
-                cfg=8,
-                sampler_name="dpmpp_2m",
-                scheduler="karras",
-                denoise=0.75,
-                model=get_value_at_index(checkpointloadersimple_152, 0),
-                positive=get_value_at_index(controlnetapply_242, 0),
-                negative=get_value_at_index(cliptextencode_154, 0),
-                latent_image=get_value_at_index(vaeencode_185, 0),
+                steps=config.infer_steps,
+                cfg=config.cfg_scale,
+                sampler_name=config.sampler,
+                scheduler=config.scheduler,
+                denoise=config.denoise,
+                model=ckpt[0],
+                positive=clip_canny[0],
+                negative=clipencode_negative[0],
+                latent_image=enc[0],
             )
 
-            vaedecode_158 = vaedecode.decode(
-                samples=get_value_at_index(ksampler_151, 0),
-                vae=get_value_at_index(checkpointloadersimple_152, 2),
-            )
-
-            imageupscalewithmodel_194 = imageupscalewithmodel.upscale(
-                upscale_model=get_value_at_index(upscalemodelloader_195, 0),
-                image=get_value_at_index(vaedecode_158, 0),
-            )
-
-            saveimage_248 = saveimage.save_images(
-                filename_prefix="ComfyUI",
-                images=get_value_at_index(imageupscalewithmodel_194, 0),
-            )
-
+            dec = VAEDecode().decode(samples=latents[0], vae=ckpt[2])
+            xres = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]().upscale(upscale_model=upscaler[0], image=dec[0])
+            SaveImage().save_images(filename_prefix="STAGE_diffusion", images=xres[0])
 
 if __name__ == "__main__":
     main()
