@@ -1,17 +1,31 @@
 #!/usr/bin/env python3
 
-import warnings
+import os, sys, warnings
+sys.path.append('/mnt/vanguard/ComfyUI')
 warnings.filterwarnings('ignore')
 
 import random
 from dataclasses import dataclass
+from PIL import Image
+import numpy as np
 import torch
 
 from main import load_extra_path_config
-from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, SaveImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
+from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
 
 load_extra_path_config("extra_model_paths.yaml")
 init_extra_nodes()
+
+def save_image(img, base_filename, directory, ext="png"):
+    os.makedirs(directory, exist_ok=True)
+    i = 1
+    while True:
+        filename = f"{base_filename}_v{i:03d}.{ext}"
+        filepath = os.path.join(directory, filename)
+        if not os.path.exists(filepath):
+            img.save(filepath)
+            break
+        i += 1
 
 @dataclass
 class HyperConfig:
@@ -21,20 +35,21 @@ class HyperConfig:
     upscale = "RealESRGAN_x2.pth"
 
     prompt = "a photograph of a red starfish, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
-    negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions, teeth"
+    negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
     VERSION = "v001"
-    SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/stage_{VERSION}_"
-    albedo = str(SOURCE + "albedo.png")
-    depth = str(SOURCE + "depth.png")
-    curvature = str(SOURCE + "curvature.png")
+    SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/"
+    filename = f"stage_{VERSION}_"
+    albedo = str(SOURCE + filename + "albedo.png")
+    depth = str(SOURCE + filename + "depth.png")
+    curvature = str(SOURCE + filename + "curvature.png")
 
     depth_stength = 1.0
     canny_stength = 0.5
 
     sampler = "dpmpp_2m"
     scheduler = "karras"
-    num_images = 1
+    num_images = 5
     infer_steps = 20
     denoise = 0.75
     cfg_scale = 8.0
@@ -76,10 +91,10 @@ def main():
             upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
             print("Upsampling: Enabled")
 
-        seed = 123 #random.randint(1, 2**64)
-        print(f"Seed: {seed}")
-
         for _ in range(config.num_images):
+            seed = random.randint(1, 2**64)
+            print(f"Seed: {seed}")
+
             latents = KSampler().sample(
                 seed=seed,
                 steps=config.infer_steps,
@@ -93,12 +108,14 @@ def main():
                 latent_image=enc[0],
             )
 
-            out = VAEDecode().decode(samples=latents[0], vae=ckpt[2])
+            dec = VAEDecode().decode(samples=latents[0], vae=ckpt[2])
 
             if config.enable_upscale:
-                out = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]().upscale(upscale_model=upscaler[0], image=out[0])
+                dec = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]().upscale(upscale_model=upscaler[0], image=dec[0])
 
-            SaveImage().save_images(filename_prefix="STAGE_diffusion", images=out[0])
+            out = dec[0].numpy().squeeze()
+            out = Image.fromarray((out * 255.0).astype(np.uint8))
+            save_image(out, "output", config.SOURCE + "diffusion")
 
 if __name__ == "__main__":
     main()
