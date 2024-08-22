@@ -11,12 +11,12 @@ import numpy as np
 import torch
 
 from main import load_extra_path_config
-from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
+from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, EmptyLatentImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
 
 load_extra_path_config("extra_model_paths.yaml")
 init_extra_nodes()
 
-def save_image(img, base_filename, directory, ext="png"):
+def save_image(img:Image.Image, base_filename:str, directory:str, ext:str="png") -> None:
     os.makedirs(directory, exist_ok=True)
     i = 1
     while True:
@@ -44,6 +44,8 @@ class HyperConfig:
     depth = str(SOURCE + filename + "depth.png")
     curvature = str(SOURCE + filename + "curvature.png")
 
+    w, h = 1024, 576
+
     depth_stength = 1.0
     canny_stength = 0.5
 
@@ -54,8 +56,8 @@ class HyperConfig:
     denoise = 0.75
     cfg_scale = 8.0
 
-    enable_img2img = True
-    enable_controlnet = True
+    enable_img2img = False
+    enable_controlnet = False
     enable_upscale = True
 
 def main():
@@ -69,7 +71,11 @@ def main():
         z = image.load_image(image=config.depth)
         curv = image.load_image(image=config.curvature)
 
-        enc = VAEEncode().encode(pixels=cd[0], vae=ckpt[2])
+        if config.enable_img2img:
+            enc = VAEEncode().encode(pixels=cd[0], vae=ckpt[2])
+        else:
+            emptylatentimage = EmptyLatentImage()
+            enc = emptylatentimage.generate(width=config.w, height=config.h, batch_size=1)
 
         clipencode = CLIPTextEncode()
         clipencode_prompt = clipencode.encode(text=config.prompt, clip=ckpt[1])
