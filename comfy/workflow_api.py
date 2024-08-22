@@ -5,10 +5,10 @@ from dataclasses import dataclass
 import torch
 
 from main import load_extra_path_config
-from nodes import init_custom_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, SaveImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
+from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, SaveImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
 
 load_extra_path_config("extra_model_paths.yaml")
-init_custom_nodes()
+init_extra_nodes()
 
 @dataclass
 class HyperConfig:
@@ -26,22 +26,23 @@ class HyperConfig:
     depth = str(SOURCE + "depth.png")
     curvature = str(SOURCE + "curvature.png")
 
-    depth_stength = 1
+    depth_stength = 2
     canny_stength = 0.5
 
     sampler = "dpmpp_2m"
     scheduler = "karras"
-    num_images = 3
+    num_images = 1
     infer_steps = 20
     denoise = 0.75
     cfg_scale = 8.0
+
+    enable_upscale = True
 
 def main():
     config = HyperConfig()
 
     with torch.inference_mode():
         ckpt = CheckpointLoaderSimple().load_checkpoint(ckpt_name=config.MODEL)
-        upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
 
         image = LoadImage()
         cd = image.load_image(image=config.albedo)
@@ -62,9 +63,15 @@ def main():
         clip_depth = controlnet.apply_controlnet(strength=config.depth_stength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
         clip_canny = controlnet.apply_controlnet(strength=config.canny_stength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
 
+        if config.enable_upscale == True:
+            upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
+
+        seed = 123 #random.randint(1, 2**64)
+        print(f"Seed: {seed}")
+
         for _ in range(config.num_images):
             latents = KSampler().sample(
-                seed=random.randint(1, 2**64),
+                seed=seed,
                 steps=config.infer_steps,
                 cfg=config.cfg_scale,
                 sampler_name=config.sampler,
@@ -76,9 +83,12 @@ def main():
                 latent_image=enc[0],
             )
 
-            dec = VAEDecode().decode(samples=latents[0], vae=ckpt[2])
-            xres = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]().upscale(upscale_model=upscaler[0], image=dec[0])
-            SaveImage().save_images(filename_prefix="STAGE_diffusion", images=xres[0])
+            out = VAEDecode().decode(samples=latents[0], vae=ckpt[2])
+
+            if config.enable_upscale == True:
+                out = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]().upscale(upscale_model=upscaler[0], image=out[0])
+
+            SaveImage().save_images(filename_prefix="STAGE_diffusion", images=out[0])
 
 if __name__ == "__main__":
     main()
