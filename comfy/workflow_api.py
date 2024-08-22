@@ -41,6 +41,7 @@ def main():
 
     with torch.inference_mode():
         ckpt = CheckpointLoaderSimple().load_checkpoint(ckpt_name=config.MODEL)
+        upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
 
         image = LoadImage()
         cd = image.load_image(image=config.albedo)
@@ -58,12 +59,10 @@ def main():
         controlnetloader_depth = controlnetloader.load_controlnet(control_net_name=config.cnet_depth)
         controlnetloader_canny = controlnetloader.load_controlnet(control_net_name=config.cnet_canny)
 
-        upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
+        clip_depth = controlnet.apply_controlnet(strength=config.depth_stength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
+        clip_canny = controlnet.apply_controlnet(strength=config.canny_stength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
 
         for _ in range(config.num_images):
-            clip_depth = controlnet.apply_controlnet(strength=config.depth_stength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
-            clip_canny = controlnet.apply_controlnet(strength=config.canny_stength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
-
             latents = KSampler().sample(
                 seed=random.randint(1, 2**64),
                 steps=config.infer_steps,
