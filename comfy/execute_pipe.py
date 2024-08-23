@@ -49,9 +49,9 @@ class HyperConfig:
     depth_stength = 1.0
     canny_stength = 0.5
 
-    sampler = "dpmpp_2m"
+    sampler = "dpmpp_sde" # "dpmpp_2m"
     scheduler = "karras"
-    num_images = 5
+    num_images = 1
     infer_steps = 20
     denoise = 0.75
     cfg_scale = 8.0
