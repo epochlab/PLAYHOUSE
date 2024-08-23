@@ -44,7 +44,8 @@ class HyperConfig:
     depth = str(SOURCE + filename + "depth.png")
     curvature = str(SOURCE + filename + "curvature.png")
 
-    w, h = 1024, 576
+    factor = 1
+    w, h = 2048 // factor, 1152 // factor
 
     depth_stength = 1.0
     canny_stength = 0.5
