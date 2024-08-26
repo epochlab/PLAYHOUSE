@@ -38,7 +38,7 @@ class HyperConfig:
     cnet_canny = "diffusers_xl_canny_full.safetensors"
     upscale = "RealESRGAN_x2.pth"
 
-    prompt = "a photograph of a normal human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    prompt = "a photograph of a human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
     negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
     VERSION = "v003"
@@ -64,6 +64,7 @@ class HyperConfig:
     denoise = 0.5
     cfg_scale = 8.0
 
+    enable_lora = True
     enable_img2img = True
     enable_controlnet = True
     enable_upscale = True
@@ -74,8 +75,12 @@ def main():
     with torch.inference_mode():
         ckpt = CheckpointLoaderSimple().load_checkpoint(ckpt_name=config.MODEL)
 
-        clipsetlastlayer = CLIPSetLastLayer().set_last_layer(stop_at_clip_layer=-1, clip=ckpt[1])
-        loraloader = LoraLoader().load_lora(lora_name=config.lora, strength_model=config.lora_model, strength_clip=config.lora_clip, model=ckpt[0], clip=clipsetlastlayer[0])
+        if config.enable_lora:
+            clipsetlastlayer = CLIPSetLastLayer().set_last_layer(stop_at_clip_layer=-1, clip=ckpt[1])
+            loraloader = LoraLoader().load_lora(lora_name=config.lora, strength_model=config.lora_model, strength_clip=config.lora_clip, model=ckpt[0], clip=clipsetlastlayer[0])
+            clip_model = loraloader[1]
+        else:
+            clip_model = ckpt[1]
 
         image = LoadImage()
         cd = image.load_image(image=config.albedo)
@@ -88,8 +93,8 @@ def main():
             enc = EmptyLatentImage().generate(width=config.w, height=config.h, batch_size=1)
 
         clipencode = CLIPTextEncode()
-        clipencode_prompt = clipencode.encode(text=config.prompt, clip=loraloader[1])
-        clipencode_negative = clipencode.encode(text=config.negative, clip=loraloader[1])
+        clipencode_prompt = clipencode.encode(text=config.prompt, clip=clip_model)
+        clipencode_negative = clipencode.encode(text=config.negative, clip=clip_model)
 
         if config.enable_controlnet:
             controlnet = ControlNetApply()
@@ -99,9 +104,9 @@ def main():
 
             clip_depth = controlnet.apply_controlnet(strength=config.depth_stength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
             clip_canny = controlnet.apply_controlnet(strength=config.canny_stength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
-            clip = clip_canny[0]
+            emb = clip_canny[0]
         else:
-            clip = clipencode_prompt[0]
+            emb = clipencode_prompt[0]
 
         if config.enable_upscale:
             upscaler = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]().load_model(model_name=config.upscale)
@@ -119,7 +124,7 @@ def main():
                 scheduler=config.scheduler,
                 denoise=config.denoise,
                 model=ckpt[0],
-                positive=clip,
+                positive=emb,
                 negative=clipencode_negative[0],
                 latent_image=enc[0],
             )
