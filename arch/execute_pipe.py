@@ -16,6 +16,9 @@ from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, Co
 load_extra_path_config("extra_model_paths.yaml")
 init_extra_nodes()
 
+# SDXL Native Resolutions | 1024x1024 1152x896 896x1152 1216x832 832x1216 1344x768 768x1344 1536x640 640x1536
+# 2.35 Aspect ratio | 1280x545, 1920x816, 2048x871
+
 def save_image(img:Image.Image, base_filename:str, directory:str, ext:str="png") -> None:
     os.makedirs(directory, exist_ok=True)
     i = 1
@@ -34,10 +37,10 @@ class HyperConfig:
     cnet_canny = "diffusers_xl_canny_full.safetensors"
     upscale = "RealESRGAN_x2.pth"
 
-    prompt = "a photograph of a red starfish, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    prompt = "a photograph of a normal human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
     negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
-    VERSION = "v001"
+    VERSION = "v003"
     SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/"
     filename = f"stage_{VERSION}_"
     albedo = str(SOURCE + filename + "albedo.png")
@@ -45,7 +48,7 @@ class HyperConfig:
     curvature = str(SOURCE + filename + "curvature.png")
 
     factor = 1
-    w, h = 2048 // factor, 1152 // factor
+    w, h = 2048//factor, 1152//factor
 
     depth_stength = 1.0
     canny_stength = 0.5
@@ -54,11 +57,11 @@ class HyperConfig:
     scheduler = "karras"
     num_images = 1
     infer_steps = 20
-    denoise = 0.75
+    denoise = 0.5
     cfg_scale = 8.0
 
-    enable_img2img = False
-    enable_controlnet = False
+    enable_img2img = True
+    enable_controlnet = True
     enable_upscale = True
 
 def main():
@@ -75,8 +78,7 @@ def main():
         if config.enable_img2img:
             enc = VAEEncode().encode(pixels=cd[0], vae=ckpt[2])
         else:
-            emptylatentimage = EmptyLatentImage()
-            enc = emptylatentimage.generate(width=config.w, height=config.h, batch_size=1)
+            enc = EmptyLatentImage().generate(width=config.w, height=config.h, batch_size=1)
 
         clipencode = CLIPTextEncode()
         clipencode_prompt = clipencode.encode(text=config.prompt, clip=ckpt[1])
