@@ -57,7 +57,7 @@ class HyperConfig:
     lora_model = 0.75
     lora_clip = 0.75
 
-    sampler = "dpmpp_sde" # "dpmpp_2m"
+    sampler = "dpmpp_2m_sde" # "dpmpp_sde"  "dpmpp_2m"
     scheduler = "karras"
     num_images = 1
     infer_steps = 20
@@ -108,7 +108,7 @@ def main():
             print("Upsampling: Enabled")
 
         for _ in range(config.num_images):
-            seed = 123 #random.randint(1, 2**64)
+            seed = random.randint(1, 2**64)
             print(f"Seed: {seed}")
 
             latents = KSampler().sample(
