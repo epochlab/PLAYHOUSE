@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 from main import load_extra_path_config
-from nodes import init_extra_nodes, CheckpointLoaderSimple, ControlNetLoader, ControlNetApply, CLIPTextEncode, EmptyLatentImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
+from nodes import init_extra_nodes, CheckpointLoaderSimple, CLIPSetLastLayer, LoraLoader, ControlNetLoader, ControlNetApply, CLIPTextEncode, EmptyLatentImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
 
 load_extra_path_config("extra_model_paths.yaml")
 init_extra_nodes()
@@ -33,6 +33,7 @@ def save_image(img:Image.Image, base_filename:str, directory:str, ext:str="png")
 @dataclass
 class HyperConfig:
     MODEL = "RealVisXL_V4.0.safetensors"
+    lora = "JuggerCineXL2.safetensors"
     cnet_depth = "diffusers_xl_depth_full.safetensors"
     cnet_canny = "diffusers_xl_canny_full.safetensors"
     upscale = "RealESRGAN_x2.pth"
@@ -53,6 +54,9 @@ class HyperConfig:
     depth_stength = 1.0
     canny_stength = 0.5
 
+    lora_model = 0.75
+    lora_clip = 0.75
+
     sampler = "dpmpp_sde" # "dpmpp_2m"
     scheduler = "karras"
     num_images = 1
@@ -70,6 +74,9 @@ def main():
     with torch.inference_mode():
         ckpt = CheckpointLoaderSimple().load_checkpoint(ckpt_name=config.MODEL)
 
+        clipsetlastlayer = CLIPSetLastLayer().set_last_layer(stop_at_clip_layer=-1, clip=ckpt[1])
+        loraloader = LoraLoader().load_lora(lora_name=config.lora, strength_model=config.lora_model, strength_clip=config.lora_clip, model=ckpt[0], clip=clipsetlastlayer[0])
+
         image = LoadImage()
         cd = image.load_image(image=config.albedo)
         z = image.load_image(image=config.depth)
@@ -81,8 +88,8 @@ def main():
             enc = EmptyLatentImage().generate(width=config.w, height=config.h, batch_size=1)
 
         clipencode = CLIPTextEncode()
-        clipencode_prompt = clipencode.encode(text=config.prompt, clip=ckpt[1])
-        clipencode_negative = clipencode.encode(text=config.negative, clip=ckpt[1])
+        clipencode_prompt = clipencode.encode(text=config.prompt, clip=loraloader[1])
+        clipencode_negative = clipencode.encode(text=config.negative, clip=loraloader[1])
 
         if config.enable_controlnet:
             controlnet = ControlNetApply()
@@ -101,7 +108,7 @@ def main():
             print("Upsampling: Enabled")
 
         for _ in range(config.num_images):
-            seed = random.randint(1, 2**64)
+            seed = 123 #random.randint(1, 2**64)
             print(f"Seed: {seed}")
 
             latents = KSampler().sample(
