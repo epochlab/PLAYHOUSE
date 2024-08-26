@@ -38,21 +38,23 @@ class HyperConfig:
     cnet_canny = "diffusers_xl_canny_full.safetensors"
     upscale = "RealESRGAN_x2.pth"
 
-    prompt = "a photograph of a human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    prompt = "a photograph of a red crab, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
     negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
-    VERSION = "v003"
+    VERSION = "v002"
     SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/"
     filename = f"stage_{VERSION}_"
     albedo = str(SOURCE + filename + "albedo.png")
     depth = str(SOURCE + filename + "depth.png")
+    # normal = str(SOURCE + filename + "normal.png")
     curvature = str(SOURCE + filename + "curvature.png")
 
-    factor = 1
+    factor = 2
     w, h = 2048//factor, 1152//factor
+    print(f"Width: {w}, Height: {h}")
 
-    depth_stength = 1.0
-    canny_stength = 0.5
+    depth_stength = 0.75
+    canny_stength = 0.25
 
     lora_model = 0.75
     lora_clip = 0.75
@@ -61,11 +63,11 @@ class HyperConfig:
     scheduler = "karras"
     num_images = 1
     infer_steps = 20
-    denoise = 0.5
+    denoise = 0.75
     cfg_scale = 8.0
 
-    enable_lora = True
-    enable_img2img = True
+    enable_img2img = False
+    enable_lora = False
     enable_controlnet = True
     enable_upscale = True
 
