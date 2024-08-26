@@ -38,10 +38,10 @@ class HyperConfig:
     cnet_canny = "diffusers_xl_canny_full.safetensors"
     upscale = "RealESRGAN_x2.pth"
 
-    prompt = "a photograph of a red crab, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    prompt = "a photograph of a human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
     negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
-    VERSION = "v002"
+    VERSION = "v001"
     SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/"
     filename = f"stage_{VERSION}_"
     albedo = str(SOURCE + filename + "albedo.png")
@@ -66,7 +66,7 @@ class HyperConfig:
     denoise = 0.75
     cfg_scale = 8.0
 
-    enable_img2img = False
+    enable_img2img = True
     enable_lora = False
     enable_controlnet = True
     enable_upscale = True
