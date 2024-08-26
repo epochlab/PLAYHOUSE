@@ -32,49 +32,46 @@ def save_image(img:Image.Image, base_filename:str, directory:str, ext:str="png")
 
 @dataclass
 class HyperConfig:
-    MODEL = "RealVisXL_V4.0.safetensors"
-    lora = "JuggerCineXL2.safetensors"
-    cnet_depth = "diffusers_xl_depth_full.safetensors"
-    cnet_canny = "diffusers_xl_canny_full.safetensors"
-    upscale = "RealESRGAN_x2.pth"
+    MODEL: str = "RealVisXL_V4.0.safetensors"
+    lora: str = "JuggerCineXL2.safetensors"
+    cnet_depth: str = "diffusers_xl_depth_full.safetensors"
+    cnet_canny: str = "diffusers_xl_canny_full.safetensors"
+    upscale: str = "RealESRGAN_x2.pth"
 
-    prompt = "a photograph of a human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
-    negative = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
+    prompt: str = "a photograph of a human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    negative: str = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
-    VERSION = "v001"
-    SOURCE = f"/mnt/vanguard/STAGE/render/{VERSION}/"
-    filename = f"stage_{VERSION}_"
-    albedo = str(SOURCE + filename + "albedo.png")
-    depth = str(SOURCE + filename + "depth.png")
-    # normal = str(SOURCE + filename + "normal.png")
-    curvature = str(SOURCE + filename + "curvature.png")
+    VERSION: str = "v001"
+    SOURCE: str = f"/mnt/vanguard/STAGE/render/{VERSION}/"
+    filename: str = f"stage_{VERSION}_"
+    albedo: str = f"{SOURCE}{filename}albedo.png"
+    depth: str = f"{SOURCE}{filename}depth.png"
+    curvature: str = f"{SOURCE}{filename}curvature.png"
 
-    factor = 2
-    w, h = 2048//factor, 1152//factor
-    print(f"Width: {w}, Height: {h}")
+    factor: int = 2
+    w, h = 2048 // factor, 1152 // factor
 
-    depth_stength = 0.75
-    canny_stength = 0.25
+    depth_strength: float = 0.75
+    canny_strength: float = 0.25
+    lora_model: float = 0.75
+    lora_clip: float = 0.75
 
-    lora_model = 0.75
-    lora_clip = 0.75
+    sampler: str = "dpmpp_2m_sde" # "dpmpp_sde"  "dpmpp_2m"
+    scheduler: str = "karras"
+    num_images: int = 1
+    infer_steps: int = 20
+    denoise: float = 0.5
+    cfg_scale: float = 8.0
 
-    sampler = "dpmpp_2m_sde" # "dpmpp_sde"  "dpmpp_2m"
-    scheduler = "karras"
-    num_images = 1
-    infer_steps = 20
-    denoise = 0.75
-    cfg_scale = 8.0
-
-    enable_img2img = True
-    enable_lora = False
-    enable_controlnet = True
-    enable_upscale = True
+    enable_img2img: bool = True
+    enable_lora: bool = False
+    enable_controlnet: bool = True
+    enable_upscale: bool = True
 
 def main():
     config = HyperConfig()
 
-    with torch.inference_mode():
+    with torch.no_grad():
         ckpt = CheckpointLoaderSimple().load_checkpoint(ckpt_name=config.MODEL)
 
         if config.enable_lora:
@@ -104,8 +101,8 @@ def main():
             controlnetloader_depth = controlnetloader.load_controlnet(control_net_name=config.cnet_depth)
             controlnetloader_canny = controlnetloader.load_controlnet(control_net_name=config.cnet_canny)
 
-            clip_depth = controlnet.apply_controlnet(strength=config.depth_stength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
-            clip_canny = controlnet.apply_controlnet(strength=config.canny_stength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
+            clip_depth = controlnet.apply_controlnet(strength=config.depth_strength, conditioning=clipencode_prompt[0], control_net=controlnetloader_depth[0], image=z[0])
+            clip_canny = controlnet.apply_controlnet(strength=config.canny_strength, conditioning=clip_depth[0], control_net=controlnetloader_canny[0], image=curv[0])
             emb = clip_canny[0]
         else:
             emb = clipencode_prompt[0]
