@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os, sys, warnings
-sys.path.append('/mnt/vanguard/ComfyUI')
+sys.path.append('ComfyUI')
 warnings.filterwarnings('ignore')
 
 import random
@@ -13,7 +13,7 @@ import torch
 from main import load_extra_path_config
 from nodes import init_extra_nodes, CheckpointLoaderSimple, CLIPSetLastLayer, LoraLoader, ControlNetLoader, ControlNetApply, CLIPTextEncode, EmptyLatentImage, LoadImage, VAEDecode, VAEEncode, KSampler, NODE_CLASS_MAPPINGS
 
-load_extra_path_config("extra_model_paths.yaml")
+load_extra_path_config("arch/extra_model_paths.yaml")
 init_extra_nodes()
 
 # SDXL Native Resolutions | 1024x1024 1152x896 896x1152 1216x832 832x1216 1344x768 768x1344 1536x640 640x1536
