@@ -40,6 +40,9 @@ Parameter | Description
 [CFG](https://arxiv.org/pdf/2112.10752) | Classifier-free guidance scale; controls how much the image generation process follows the text prompt.
 
 ## IO
+Use [Houdini](www.sidefx.com) to dictate scene layout and generate the source imagery and required AOV's for the Controlnet (Albedo, ZDepth, Normals and Curvature)
+
+To ensure the final diffused images exhibit the optical characteristics we provide a [Nuke](www.foundry.com/nuke) framework to apply lens artifacts such as lens distortion, noise/grain and chromatic aberration.
 
 ## Models
 Currently `PLAYHOUSE` only supports Stable-Diffusion (1.4, 1.5, 3, SDXL).
