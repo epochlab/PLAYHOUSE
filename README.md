@@ -14,11 +14,10 @@ Abstract: *A **Latent Diffusion Engine (LDE)** is a machine learning model that 
 ## Installation
     git clone https://github.com/epochlab/PLAYHOUSE
 
-Navigate into the `STAGE` directory and clone `ComfyUI` then install the required packages.
+Navigate into the `PLAYHOUSE` directory and clone `ComfyUI` then install the required packages.
 
     git clone https://github.com/comfyanonymous/ComfyUI.git
     pip install -r requirements.txt
-
 
 Run:
 ```
@@ -40,9 +39,9 @@ Parameter | Description
 [CFG](https://arxiv.org/pdf/2112.10752) | Classifier-free guidance scale; controls how much the image generation process follows the text prompt.
 
 ## IO
-Use [Houdini](www.sidefx.com) to dictate scene layout and generate the source imagery and required AOV's for the Controlnet (Albedo, ZDepth, Normals and Curvature)
+Use [Houdini](www.sidefx.com) to dictate scene layout and generate the source imagery and required AOV's (Albedo, ZDepth, Normals and Curvature)
 
-To ensure the final diffused images exhibit the optical characteristics we provide a [Nuke](www.foundry.com/nuke) framework to apply lens artifacts such as lens distortion, noise/grain and chromatic aberration.
+To ensure the generated images exhibit the optical characteristics found in photographs, use the [Nuke](https://www.foundry.com/products/nuke-family/non-commercial) framework to apply lens artifacts such as lens distortion, colour grading, noise/grain and chromatic aberration.
 
 ## Models
-Currently `PLAYHOUSE` only supports Stable-Diffusion (1.4, 1.5, 3, SDXL).
+Currently `PLAYHOUSE` only supports [Stable-Diffusion](https://stability.ai) (1.4, 1.5, 3, SDXL).
