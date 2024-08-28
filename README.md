@@ -36,7 +36,7 @@ Parameter | Description
 [Sampler](https://arxiv.org/pdf/2211.01095) | Direct the steps and processes by which noise is gradually refined into a coherent image.
 [Scheduler](https://arxiv.org/pdf/2206.00364) | Control the timing and magnitude of updates applied to the model, impacting how noise is reduced across iterations.
 [Denoise](https://arxiv.org/pdf/2112.10752) | The amount of denoise to apply to the latent source vector.
-[CFG](https://arxiv.org/pdf/2112.10752) | Classifier-free guidance; scale how much the image generation process follows the text prompt.
+[CFG](https://arxiv.org/pdf/2207.12598) | Classifier-free guidance; scale how much the image generation process follows the text prompt.
 
 ## IO
 Use [Houdini](www.sidefx.com) to dictate scene layout and generate the source imagery and required AOV's (Albedo, ZDepth, Normals and Curvature)
