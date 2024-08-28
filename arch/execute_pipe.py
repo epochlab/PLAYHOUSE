@@ -16,9 +16,6 @@ from nodes import init_extra_nodes, CheckpointLoaderSimple, CLIPSetLastLayer, Lo
 load_extra_path_config("arch/extra_model_paths.yaml")
 init_extra_nodes()
 
-# SDXL Native Resolutions | 1024x1024 1152x896 896x1152 1216x832 832x1216 1344x768 768x1344 1536x640 640x1536
-# 2.35 Aspect ratio | 1280x545, 1920x816, 2048x871
-
 def save_image(img:Image.Image, base_filename:str, directory:str, ext:str="png") -> None:
     os.makedirs(directory, exist_ok=True)
     i = 1
@@ -42,11 +39,12 @@ class HyperConfig:
     negative: str = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
     VERSION: str = "v001"
-    SOURCE: str = f"/mnt/vanguard/STAGE/render/{VERSION}/"
-    filename: str = f"stage_{VERSION}_"
-    albedo: str = f"{SOURCE}{filename}albedo.png"
-    depth: str = f"{SOURCE}{filename}depth.png"
-    curvature: str = f"{SOURCE}{filename}curvature.png"
+    SOURCE: str = f"/mnt/vanguard/PLAYHOUSE/render/{VERSION}/"
+    filename: str = f"output_{VERSION}"
+    albedo: str = f"{SOURCE}{filename}_albedo.png"
+    depth: str = f"{SOURCE}{filename}_depth.png"
+    # normal: str = f"{SOURCE}{filename}_normal.png"
+    curvature: str = f"{SOURCE}{filename}_curvature.png"
 
     factor: int = 2
     w, h = 2048 // factor, 1152 // factor
