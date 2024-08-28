@@ -19,6 +19,8 @@ Navigate into the `PLAYHOUSE` directory and clone `ComfyUI` then install the req
     git clone https://github.com/comfyanonymous/ComfyUI.git
     pip install -r requirements.txt
 
+Update model directory paths: `arch/extra_model_paths.yaml`
+
 Run:
 ```
 python arch/execute.py

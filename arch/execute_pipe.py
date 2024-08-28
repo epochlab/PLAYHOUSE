@@ -35,7 +35,7 @@ class HyperConfig:
     cnet_canny: str = "diffusers_xl_canny_full.safetensors"
     upscale: str = "RealESRGAN_x2.pth"
 
-    prompt: str = "a photograph of a human skull, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
+    prompt: str = "a photograph of a red starfish, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
     negative: str = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
     VERSION: str = "v001"
@@ -46,7 +46,7 @@ class HyperConfig:
     # normal: str = f"{SOURCE}{filename}_normal.png"
     curvature: str = f"{SOURCE}{filename}_curvature.png"
 
-    factor: int = 2
+    factor: int = 1
     w, h = 2048 // factor, 1152 // factor
 
     depth_strength: float = 0.75
@@ -54,17 +54,17 @@ class HyperConfig:
     lora_model: float = 0.75
     lora_clip: float = 0.75
 
-    sampler: str = "dpmpp_2m_sde" # "dpmpp_sde"  "dpmpp_2m"
+    sampler: str =  "dpmpp_2m_sde" # "dpmpp_sde" "dpmpp_2m"
     scheduler: str = "karras"
     num_images: int = 1
     infer_steps: int = 20
-    denoise: float = 0.5
-    cfg_scale: float = 8.0
+    denoise: float = 0.8
+    cfg_scale: float = 7.0
 
-    enable_img2img: bool = True
+    enable_img2img: bool = False
     enable_lora: bool = False
-    enable_controlnet: bool = True
-    enable_upscale: bool = True
+    enable_controlnet: bool = False
+    enable_upscale: bool = False
 
 def main():
     config = HyperConfig()
@@ -80,9 +80,11 @@ def main():
             clip_model = ckpt[1]
 
         image = LoadImage()
-        cd = image.load_image(image=config.albedo)
-        z = image.load_image(image=config.depth)
-        curv = image.load_image(image=config.curvature)
+        if config.enable_img2img:
+            cd = image.load_image(image=config.albedo)
+        if config.enable_controlnet:
+            z = image.load_image(image=config.depth)
+            curv = image.load_image(image=config.curvature)
 
         if config.enable_img2img:
             enc = VAEEncode().encode(pixels=cd[0], vae=ckpt[2])
