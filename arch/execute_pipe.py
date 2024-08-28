@@ -38,21 +38,8 @@ class HyperConfig:
     prompt: str = "a photograph of a red starfish, ((high resolution, high-resolution, cinematic, technicolor, film grain, analog, 70mm, 8K, IMAX, Nat Geo, DSLR))"
     negative: str = "worst quality, low quality, low-res, low details, cropped, blurred, defocus, bokeh, oversaturated, undersaturated, overexposed, underexposed, letterbox, aspect ratio, formatted, jpeg artefacts, draft, glitch, error, deformed, distorted, disfigured, duplicated, bad proportions"
 
-    VERSION: str = "v001"
-    SOURCE: str = f"/mnt/vanguard/PLAYHOUSE/render/{VERSION}/"
-    filename: str = f"output_{VERSION}"
-    albedo: str = f"{SOURCE}{filename}_albedo.png"
-    depth: str = f"{SOURCE}{filename}_depth.png"
-    # normal: str = f"{SOURCE}{filename}_normal.png"
-    curvature: str = f"{SOURCE}{filename}_curvature.png"
-
     factor: int = 1
     w, h = 2048 // factor, 1152 // factor
-
-    depth_strength: float = 0.75
-    canny_strength: float = 0.25
-    lora_model: float = 0.75
-    lora_clip: float = 0.75
 
     sampler: str =  "dpmpp_2m_sde" # "dpmpp_sde" "dpmpp_2m"
     scheduler: str = "karras"
@@ -65,6 +52,19 @@ class HyperConfig:
     enable_lora: bool = False
     enable_controlnet: bool = False
     enable_upscale: bool = False
+
+    VERSION: str = "v001"
+    SOURCE: str = f"/mnt/vanguard/PLAYHOUSE/render/{VERSION}/"
+    filename: str = f"output_{VERSION}"
+    albedo: str = f"{SOURCE}{filename}_albedo.png"
+    depth: str = f"{SOURCE}{filename}_depth.png"
+    # normal: str = f"{SOURCE}{filename}_normal.png"
+    curvature: str = f"{SOURCE}{filename}_curvature.png"
+
+    depth_strength: float = 0.75
+    canny_strength: float = 0.25
+    lora_model: float = 0.75
+    lora_clip: float = 0.75
 
 def main():
     config = HyperConfig()
