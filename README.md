@@ -33,7 +33,7 @@ Parameter | Description
 ------- | -------
 [Model](https://en.wikipedia.org/wiki/Stable_Diffusion) | The diffusion model choosen for inferance (eg. SDXL).
 [LoRA](https://arxiv.org/pdf/2106.09685) | Low-Rank Adaptation; a fine-tuning technique for reducing the number of parameters trained.
-[Controlnet](https://arxiv.org/pdf/2302.05543) | A network extension which controls image synthesis by adding extra conditions.
+[ControlNet](https://arxiv.org/pdf/2302.05543) | A network extension which controls image synthesis by adding extra conditions.
 [Upscale](https://arxiv.org/pdf/1809.00219) | Generate high-resolution images from lower-resolution inputs by predicting and adding finer details to the image.
 [Sampler](https://arxiv.org/pdf/2211.01095) | Direct the steps and processes by which noise is gradually refined into a coherent image.
 [Scheduler](https://arxiv.org/pdf/2206.00364) | Control the timing and magnitude of updates applied to the model, impacting how noise is reduced across iterations.
@@ -41,6 +41,10 @@ Parameter | Description
 [CFG](https://arxiv.org/pdf/2207.12598) | Classifier-free guidance; scale how much the image generation process follows the text prompt.
 
 ## MODELS
+[SDXL](https://en.wikipedia.org/wiki/Stable_Diffusion) | Stable Diffusion XL
+[EDSRGAN](https://en.wikipedia.org/wiki/Stable_Diffusion) | EDSR Upscaling
+[ControlNet](https://huggingface.co/lllyasviel/sd_control_collection/tree/main) | Canny & Depth
+
 
 ## IO
 Use [Houdini](www.sidefx.com) to dictate scene layout and generate the source imagery and required AOV's (Albedo, ZDepth, Normals and Curvature)
