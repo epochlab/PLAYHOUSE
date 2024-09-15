@@ -1,4 +1,4 @@
-# PLAYHOUSE [Work-In-Progress] 
+# PLAYHOUSE
 
 **Project ID:** pLxS4aFn
 
@@ -39,6 +39,8 @@ Parameter | Description
 [Scheduler](https://arxiv.org/pdf/2206.00364) | Control the timing and magnitude of updates applied to the model, impacting how noise is reduced across iterations.
 [Denoise](https://arxiv.org/pdf/2112.10752) | The amount of denoise to apply to the latent source vector.
 [CFG](https://arxiv.org/pdf/2207.12598) | Classifier-free guidance; scale how much the image generation process follows the text prompt.
+
+## MODELS
 
 ## IO
 Use [Houdini](www.sidefx.com) to dictate scene layout and generate the source imagery and required AOV's (Albedo, ZDepth, Normals and Curvature)
