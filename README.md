@@ -41,9 +41,9 @@ Parameter | Description
 [CFG](https://arxiv.org/pdf/2207.12598) | Classifier-free guidance; scale how much the image generation process follows the text prompt.
 
 ## MODELS
-[SDXL](https://en.wikipedia.org/wiki/Stable_Diffusion) | Stable Diffusion XL<br>
-[EDSRGAN](https://en.wikipedia.org/wiki/Stable_Diffusion) | EDSR Upscaling<br>
-[ControlNet](https://huggingface.co/lllyasviel/sd_control_collection/tree/main) | Canny & Depth
+[Stable Diffusion XL](https://en.wikipedia.org/wiki/Stable_Diffusion)<br>
+[EDSRGAN  Upscaling](https://en.wikipedia.org/wiki/Stable_Diffusion)<br>
+[ControlNet](https://huggingface.co/lllyasviel/sd_control_collection/tree/main)
 
 
 ## IO
