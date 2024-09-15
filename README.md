@@ -42,8 +42,8 @@ Parameter | Description
 
 ## MODELS
 [Stable Diffusion XL](https://en.wikipedia.org/wiki/Stable_Diffusion)<br>
-[EDSRGAN  Upscaling](https://en.wikipedia.org/wiki/Stable_Diffusion)<br>
-[ControlNet](https://huggingface.co/lllyasviel/sd_control_collection/tree/main)
+[EDSR Upscaling](https://en.wikipedia.org/wiki/Stable_Diffusion)<br>
+[ControlNet| Depth & Canny](https://huggingface.co/lllyasviel/sd_control_collection/tree/main)
 
 
 ## IO
