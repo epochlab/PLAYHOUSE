@@ -4,7 +4,7 @@
 
 <div align="center">
 <picture>
-  <img alt="Stage Skull" src="sample.png" width="100%">
+  <img alt="Playhouse Skull" src="sample.png" width="100%">
 </picture>
 </div>
 
